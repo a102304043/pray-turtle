@@ -168,36 +168,44 @@
       }
     }
 
-    let burnProgress = 0;
-    let burnRAF;
-    function burnStep() {
-      burnProgress += 0.005;
-      if (burnProgress >= 1) burnProgress = 1;
-
-      // 產生新粒子
-      for (let i = 0; i < 10; i++) {
-        particles.push(new Particle(
-          sunPos.x + (Math.random() - 0.5) * 500,
-          sunPos.y + (Math.random() - 0.5) * 500
-        ));
+  let burnProgress = 0;
+  let fadeProgress = 0;
+  let burningDone = false;
+  let burnRAF;
+  
+  function burnStep() {
+    if (!burningDone) {
+      burnProgress += 0.005;  // 燒慢一點
+      if (burnProgress >= 1) {
+        burningDone = true;
       }
-
-      // 更新粒子
-      particles.forEach(p => p.update());
-      renderScene();
-      // 畫粒子
-      particles.forEach(p => p.draw());
-      // 清除死亡粒子
-      for (let i = particles.length - 1; i >= 0; i--) {
-        if (particles[i].life <= 0) particles.splice(i, 1);
-      }
-
-      if (burnProgress < 1) {
-        burnRAF = requestAnimationFrame(burnStep);
-      } else {
-        setTimeout(() => alert('🔥 祈晴儀式完成！願天氣放晴！'), 500);
-      }
+    } else {
+      fadeProgress += 0.01;  // 控制淡出速度
     }
+  
+    renderScene();
+    particles.forEach(p => p.update());
+    particles.forEach(p => p.draw());
+  
+    // 畫黑色淡出層
+    if (burningDone) {
+      ctx.fillStyle = `rgba(0,0,0,${Math.min(fadeProgress,1)})`;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+    }
+  
+    // 處理粒子消失
+    for (let i = particles.length - 1; i >= 0; i--) {
+      if (particles[i].life <= 0) particles.splice(i, 1);
+    }
+  
+    if (fadeProgress < 1.5) { // 等到黑到看不見
+      burnRAF = requestAnimationFrame(burnStep);
+    } else {
+      setTimeout(() => {
+        alert('🔥 祈晴儀式完成！願天氣放晴！');
+      }, 300);
+    }
+  }
 
     document.getElementById('burnBtn').addEventListener('click', () => {
       burnProgress = 0;
