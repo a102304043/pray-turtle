@@ -152,7 +152,7 @@
         this.vx = (Math.random() - 0.5) * 4;
         this.vy = Math.random() * -4 - 2;
         this.life = 0.6 + (50 - this.size) / 50; // 火焰越小活得越久
-        this.size = 20 + Math.random() * 30;  // 🔥 粒子大小 20~50px之間隨機
+        this.size = 20 + Math.random() * 100;  // 🔥 粒子大小 20~50px之間隨機
       }
       update() {
         this.x += this.vx;
