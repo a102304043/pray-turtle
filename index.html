@@ -108,11 +108,18 @@
     burnStep();
   });
 
-  document.getElementById('resetBtn').addEventListener('click',()=>{
-    turtles.length=0;
-    particles.length=0;
-    burnProgress=fadeProgress=0;burningDone=false;
+    document.getElementById('resetBtn').addEventListener('click',()=>{
+    // 停止任何尚未完成的燃燒動畫
     cancelAnimationFrame(burnRAF);
+    burnProgress = 0;
+    fadeProgress = 0;
+    burningDone  = false;
+    particles.length = 0;
+    turtles.length   = 0;
+    // 清空畫布後重新渲染
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    renderScene();
+  });
     renderScene();
   });
 
