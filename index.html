@@ -79,7 +79,10 @@ function burnStep(){
 document.getElementById('drawBtn').addEventListener('click',()=>{
   let x,y,tries=0; do{ x=Math.random()*(canvas.width-100)+50; y=Math.random()*(canvas.height-200)+50; }
   while(Math.hypot(x-sunPos.x,y-sunPos.y)<sunPos.r+80 && ++tries<20);
-  const size=40+Math.random()*60; const ang=Math.atan2(sunPos.y - y, sunPos.x - x);
+  const size = 40 + Math.random() * 60;
+  // 計算角度使烏龜頭(圖片上方)朝向太陽
+  // 原始烏龜圖片頭朝向「左」(-X)，故需再偏移 -π 使頭指向太陽
+  const ang  = Math.atan2(sunPos.y - y, sunPos.x - x) - Math.PI;
   turtles.push(new Turtle(x,y,ang,size)); renderScene();
 });
 
