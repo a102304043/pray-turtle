@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>燒烏龜祈晴 – 互動版（可愛版）</title>
+  <style>
+    body {
+      font-family: "Noto Sans TC", Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #fafafa;
+    }
+    #controls {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    label {
+      font-size: 1.1rem;
+    }
+    input {
+      margin-left: 6px;
+      padding: 8px 12px;
+      font-size: 1.1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      padding: 14px 28px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #4caf50;
+      color: #fff;
+      transition: background 0.2s;
+    }
+    button:hover { background: #43a047; }
+    button#burnBtn { background: #e65100; }
+    button#burnBtn:hover { background: #bf360c; }
+    button#resetBtn { background: #546e7a; }
+    button#resetBtn:hover { background: #37474f; }
+    canvas {
+      border: 3px solid #ccc;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label>日期 <input id="dateInput" type="date" /></label>
+    <label>時間 <input id="timeInput" type="time" /></label>
+    <label>地點 <input id="locInput" type="text" placeholder="祈晴地點" /></label>
+    <button id="drawBtn">畫 🐢</button>
+    <button id="burnBtn">燒 🔥</button>
+    <button id="resetBtn">重來 ↺</button>
+  </div>
+
+  <canvas id="paper" width="800" height="800"></canvas>
+
+  <script>
+    const canvas = document.getElementById('paper');
+    const ctx = canvas.getContext('2d');
+    const turtles = [];
+    const particles = [];
+    const sunPos = { x: canvas.width / 2, y: canvas.height / 2, r: 120 };
+
+    // 載入圖片
+    const turtleImg = new Image(); turtleImg.src = 'turtle.png';
+    const sunImg = new Image(); sunImg.src = 'sun.png';
+    const fireImg = new Image(); fireImg.src = 'fire.png';
+
+    function drawPaperBG() {
+      ctx.fillStyle = '#FFFFF0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawSun() {
+      if (sunImg.complete) {
+        ctx.drawImage(sunImg, sunPos.x - 100, sunPos.y - 100, 200, 200);
+      }
+    }
+
+    function drawTurtle(x, y, angle) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      if (turtleImg.complete) {
+        ctx.drawImage(turtleImg, -30, -30, 60, 60);
+      }
+      ctx.restore();
+    }
+
+    class Turtle {
+      constructor(x, y, angle) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+      }
+      draw() { drawTurtle(this.x, this.y, this.angle); }
+    }
+
+    function drawFooter() {
+      const date = document.getElementById('dateInput').value || 'YYYY-MM-DD';
+      const time = document.getElementById('timeInput').value || 'HH:MM';
+      const loc  = document.getElementById('locInput').value  || '地點';
+      ctx.fillStyle = '#000';
+      ctx.font = '28px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${date}  ${time}`, canvas.width / 2, canvas.height - 60);
+      ctx.fillText(loc, canvas.width / 2, canvas.height - 20);
+    }
+
+    function renderScene() {
+      drawPaperBG();
+      drawSun();
+      turtles.forEach(t => t.draw());
+      drawFooter();
+    }
+
+    document.getElementById('drawBtn').addEventListener('click', () => {
+      let x, y, tries = 0;
+      do {
+        x = Math.random() * (canvas.width - 100) + 50;
+        y = Math.random() * (canvas.height - 200) + 50;
+      } while (Math.hypot(x - sunPos.x, y - sunPos.y) < sunPos.r + 80 && ++tries < 20);
+
+      const angle = Math.atan2(sunPos.y - y, sunPos.x - x) + Math.PI / 2;
+      turtles.push(new Turtle(x, y, angle));
+      renderScene();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      turtles.length = 0;
+      particles.length = 0;
+      burnProgress = 0;
+      cancelAnimationFrame(burnRAF);
+      renderScene();
+    });
+
+    // 火焰粒子系統
+    class Particle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 4;
+        this.vy = Math.random() * -4 - 2;
+        this.life = 1.0;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= 0.02;
+      }
+      draw() {
+        if (fireImg.complete) {
+          ctx.globalAlpha = Math.max(this.life, 0);
+          ctx.drawImage(fireImg, this.x - 16, this.y - 16, 32, 32);
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
+
+    let burnProgress = 0;
+    let burnRAF;
+    function burnStep() {
+      burnProgress += 0.01;
+      if (burnProgress >= 1) burnProgress = 1;
+
+      // 產生新粒子
+      for (let i = 0; i < 5; i++) {
+        particles.push(new Particle(
+          sunPos.x + (Math.random() - 0.5) * 500,
+          sunPos.y + (Math.random() - 0.5) * 500
+        ));
+      }
+
+      // 更新粒子
+      particles.forEach(p => p.update());
+      renderScene();
+      // 畫粒子
+      particles.forEach(p => p.draw());
+      // 清除死亡粒子
+      for (let i = particles.length - 1; i >= 0; i--) {
+        if (particles[i].life <= 0) particles.splice(i, 1);
+      }
+
+      if (burnProgress < 1) {
+        burnRAF = requestAnimationFrame(burnStep);
+      } else {
+        setTimeout(() => alert('🔥 祈晴儀式完成！願天氣放晴！'), 500);
+      }
+    }
+
+    document.getElementById('burnBtn').addEventListener('click', () => {
+      burnProgress = 0;
+      particles.length = 0;
+      cancelAnimationFrame(burnRAF);
+      burnStep();
+    });
+
+    renderScene();
+  </script>
+</body>
+</html>
