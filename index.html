@@ -2,16 +2,18 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 – 全畫布燃燒版</title>
+  <title>燒烏龜祈晴 – 終極修正版</title>
   <style>
-    body{font-family:"Noto Sans TC",Arial,sans-serif;margin:0;display:flex;flex-direction:column;align-items:center;background:#fafafa}
+    body{font-family:"Noto Sans TC",Arial, sans-serif;margin:0;display:flex;flex-direction:column;align-items:center;background:#fafafa}
     #controls{display:flex;gap:1rem;padding:1rem;flex-wrap:wrap;justify-content:center}
     label{font-size:1.1rem}
     input{margin-left:6px;padding:8px 12px;font-size:1.1rem;border:1px solid #ccc;border-radius:6px}
     button{padding:14px 28px;font-size:1.4rem;font-weight:700;border:none;border-radius:10px;cursor:pointer;background:#4caf50;color:#fff;transition:background .2s}
     button:hover{background:#43a047}
-    #burnBtn{background:#e65100}#burnBtn:hover{background:#bf360c}
-    #resetBtn{background:#546e7a}#resetBtn:hover{background:#37474f}
+    #burnBtn{background:#e65100}
+    #burnBtn:hover{background:#bf360c}
+    #resetBtn{background:#546e7a}
+    #resetBtn:hover{background:#37474f}
     canvas{border:3px solid #ccc;box-shadow:0 6px 15px rgba(0,0,0,.2);margin-bottom:1rem}
   </style>
 </head>
@@ -27,72 +29,123 @@
 
   <canvas id="paper" width="800" height="800"></canvas>
 
-<script>
-/* ---------- 全域變數 ---------- */
-const canvas = document.getElementById('paper');
-const ctx    = canvas.getContext('2d');
-const turtles=[];const particles=[];
-const sunPos ={x:canvas.width/2,y:canvas.height/2,r:120};
+  <script>
+  /* ---------------- 基本變數 ---------------- */
+  const canvas = document.getElementById('paper');
+  const ctx    = canvas.getContext('2d');
+  const turtles   = [];
+  const particles = [];
+  const sunPos = {x: canvas.width/2, y: canvas.height/2, r: 120};
 
-/* ---------- 載入圖片 ---------- */
-const turtleImg=new Image();turtleImg.src='turtle.png';
-const sunImg   =new Image();sunImg.src   ='sun.png';
-const fireImg  =new Image();fireImg.src  ='fire.png';
+  /* ---------------- 載入圖片 ---------------- */
+  const turtleImg = new Image(); turtleImg.src = 'turtle.png';
+  const sunImg    = new Image(); sunImg.src   = 'sun.png';
+  const fireImg   = new Image(); fireImg.src  = 'fire.png';
 
-/* ---------- 畫面元件 ---------- */
-function drawPaperBG(){ctx.fillStyle='#FFFFF0';ctx.fillRect(0,0,canvas.width,canvas.height);} 
-function drawSun(){if(sunImg.complete)ctx.drawImage(sunImg,sunPos.x-100,sunPos.y-100,200,200);} 
-function drawTurtle(x,y,ang,size){ctx.save();ctx.translate(x,y);ctx.rotate(ang);if(turtleImg.complete)ctx.drawImage(turtleImg,-size/2,-size/2,size,size);ctx.restore();} 
-class Turtle{constructor(x,y,ang,size){this.x=x;this.y=y;this.ang=ang;this.size=size;} draw(){drawTurtle(this.x,this.y,this.ang,this.size);}}
-function drawFooter(){const d=document.getElementById('dateInput').value||'YYYY-MM-DD';const t=document.getElementById('timeInput').value||'HH:MM';const l=document.getElementById('locInput').value||'地點';ctx.fillStyle='#000';ctx.font='28px sans-serif';ctx.textAlign='center';ctx.fillText(`${d}  ${t}`,canvas.width/2,canvas.height-60);ctx.fillText(l,canvas.width/2,canvas.height-20);} 
-function renderScene(){drawPaperBG();drawSun();turtles.forEach(t=>t.draw());drawFooter();}
+  /* ---------------- 畫布元件 ---------------- */
+  function drawPaperBG(){ctx.fillStyle="#FFFFF0";ctx.fillRect(0,0,canvas.width,canvas.height)}
+  function drawSun(){if(sunImg.complete)ctx.drawImage(sunImg,sunPos.x-100,sunPos.y-100,200,200)}
+  function drawTurtle(x, y, angle, size) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      if (turtleImg.complete) {
+        ctx.drawImage(turtleImg, -size / 2, -size / 2, size, size);
+      }
+      ctx.restore();
+    }
 
-/* ---------- 火焰粒子 ---------- */
-class Particle{
-  constructor(x,y){this.x=x;this.y=y;this.vx=(Math.random()-0.5)*4;this.vy=Math.random()*-4-2;this.size=20+Math.random()*60;this.life=0.8+Math.random()*0.8;}
-  update(){this.x+=this.vx;this.y+=this.vy;this.life-=0.02;}
-  draw(){if(fireImg.complete){ctx.globalAlpha=Math.max(this.life,0);ctx.drawImage(fireImg,this.x-this.size/2,this.y-this.size/2,this.size,this.size);ctx.globalAlpha=1;}}
-}
+    class Turtle {
+      constructor(x, y, angle, size) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.size = size; // 個別烏龜大小
+      }
+      draw() { drawTurtle(this.x, this.y, this.angle, this.size); }
+    }{ drawTurtle(this.x, this.y, this.a, this.s); }
+    }{drawTurtle(this.x,this.y,this.a)}}
+  function drawFooter(){const d=document.getElementById('dateInput').value||'YYYY-MM-DD';const t=document.getElementById('timeInput').value||'HH:MM';const l=document.getElementById('locInput').value||'地點';ctx.fillStyle="#000";ctx.font="28px sans-serif";ctx.textAlign="center";ctx.fillText(`${d}  ${t}`,canvas.width/2,canvas.height-60);ctx.fillText(l,canvas.width/2,canvas.height-20)}
+  function renderScene(){drawPaperBG();drawSun();turtles.forEach(t=>t.draw());drawFooter()}
 
-/* ---------- 燒紙動畫 ---------- */
-let burnProgress=0,fadeProgress=0,burningDone=false,burnRAF;
-function burnStep(){
-  if(!burningDone){burnProgress+=0.005; if(burnProgress>=1) burningDone=true;} else {fadeProgress+=0.01;}
-
-  // 每幀新增粒子：覆蓋整張畫布隨機位置，邊緣也會著火
-  for(let i=0;i<8;i++){
-    const x=Math.random()*canvas.width;
-    const y=Math.random()*canvas.height;
-    particles.push(new Particle(x,y));
+  /* ---------------- 火焰粒子 ---------------- */
+  class Particle{
+    constructor(x,y){
+      this.x=x;this.y=y;
+      this.vx=(Math.random()-0.5)*4;
+      this.vy=Math.random()*-4-2;
+      this.size=20+Math.random()*60; //20-80px
+      this.life=0.8+Math.random()*0.8; //0.8-1.6秒
+    }
+    update(){this.x+=this.vx;this.y+=this.vy;this.life-=0.02}
+    draw(){if(fireImg.complete){ctx.globalAlpha=Math.max(this.life,0);ctx.drawImage(fireImg,this.x-this.size/2,this.y-this.size/2,this.size,this.size);ctx.globalAlpha=1}}
   }
 
-  particles.forEach(p=>p.update());
+  /* ---------------- 燒紙動畫 ---------------- */
+  let burnProgress=0, fadeProgress=0, burningDone=false, burnRAF;
+  function burnStep(){
+    // 進度與黑屏
+    if(!burningDone){burnProgress+=0.005;if(burnProgress>=1)burningDone=true;}else{fadeProgress+=0.01;}
+
+    // 每幀新增粒子
+    for(let i=0;i<6;i++){
+      particles.push(new Particle(
+        sunPos.x+(Math.random()-0.5)*400,
+        sunPos.y+(Math.random()-0.5)*400));
+    }
+
+    // 更新粒子與主畫面
+    particles.forEach(p=>p.update());
+    renderScene();
+    particles.forEach(p=>p.draw());
+
+    // 移除死亡粒子
+    for(let i=particles.length-1;i>=0;i--){if(particles[i].life<=0)particles.splice(i,1);}
+
+    // 黑色淡出層
+    if(burningDone){ctx.fillStyle=`rgba(0,0,0,${Math.min(fadeProgress,1)})`;ctx.fillRect(0,0,canvas.width,canvas.height);}
+
+    if(fadeProgress<1.5){burnRAF=requestAnimationFrame(burnStep);}else{setTimeout(()=>alert('🔥 祈晴儀式完成！願天氣放晴！'),300);}
+  }
+
+  /* ---------------- 事件監聽 ---------------- */
+    document.getElementById('drawBtn').addEventListener('click',()=>{
+    let x,y,tries=0;
+    do{ x=Math.random()*(canvas.width-100)+50; y=Math.random()*(canvas.height-200)+50; }
+    while(Math.hypot(x-sunPos.x,y-sunPos.y)<sunPos.r+80&&++tries<20);
+    const ang=Math.atan2(sunPos.y-y,sunPos.x-x)+Math.PI/2;
+    const size = 40 + Math.random()*60; // 40~100 隨機大小
+    turtles.push(new Turtle(x,y,ang,size));
+    renderScene();
+  });
+  });
+  });
+
+  document.getElementById('burnBtn').addEventListener('click',()=>{
+    burnProgress=fadeProgress=0;
+    burningDone=false;
+    particles.length=0;
+    cancelAnimationFrame(burnRAF);
+    burnStep();
+  });
+
+    document.getElementById('resetBtn').addEventListener('click',()=>{
+    // 停止任何尚未完成的燃燒動畫
+    cancelAnimationFrame(burnRAF);
+    burnProgress = 0;
+    fadeProgress = 0;
+    burningDone  = false;
+    particles.length = 0;
+    turtles.length   = 0;
+    // 清空畫布後重新渲染
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    renderScene();
+  });
+    renderScene();
+  });
+
+  /* ---------------- 首次渲染 ---------------- */
   renderScene();
-  particles.forEach(p=>p.draw());
-  for(let i=particles.length-1;i>=0;i--){if(particles[i].life<=0)particles.splice(i,1);} 
-
-  if(burningDone){ctx.fillStyle=`rgba(0,0,0,${Math.min(fadeProgress,1)})`;ctx.fillRect(0,0,canvas.width,canvas.height);} 
-  if(fadeProgress<1.5){burnRAF=requestAnimationFrame(burnStep);}else{setTimeout(()=>alert('🔥 祈晴儀式完成！願天氣放晴！'),300);} 
-}
-
-/* ---------- 事件 ---------- */
-document.getElementById('drawBtn').addEventListener('click',()=>{
-  let x,y,tries=0; do{ x=Math.random()*(canvas.width-100)+50; y=Math.random()*(canvas.height-200)+50; }
-  while(Math.hypot(x-sunPos.x,y-sunPos.y)<sunPos.r+80 && ++tries<20);
-  const size=40+Math.random()*60; const ang=Math.atan2(sunPos.y-y,sunPos.x-x)+Math.PI/2;
-  turtles.push(new Turtle(x,y,ang,size)); renderScene();
-});
-
-document.getElementById('burnBtn').addEventListener('click',()=>{
-  burnProgress=fadeProgress=0; burningDone=false; particles.length=0; cancelAnimationFrame(burnRAF); burnStep();
-});
-
-document.getElementById('resetBtn').addEventListener('click',()=>{
-  turtles.length=0; particles.length=0; burnProgress=fadeProgress=0; burningDone=false; cancelAnimationFrame(burnRAF); ctx.clearRect(0,0,canvas.width,canvas.height); renderScene();
-});
-
-/* ---------- 初始 ---------- */
-renderScene();
-</script>
+  </script>
 </body>
 </html>
