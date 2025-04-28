@@ -181,25 +181,34 @@
           burningDone = true;
         }
       } else {
-        fadeProgress += 0.01;  // 控制淡出速度
+        fadeProgress += 0.01;   // 開始慢慢黑掉
       }
     
       renderScene();
+    
+      // 🔥 每幀新增火粒
+      for (let i = 0; i < 5; i++) {
+        particles.push(new Particle(
+          sunPos.x + (Math.random() - 0.5) * 400,
+          sunPos.y + (Math.random() - 0.5) * 400
+        ));
+      }
+    
       particles.forEach(p => p.update());
       particles.forEach(p => p.draw());
     
-      // 畫黑色淡出層
+      // 🔥 畫黑色淡出
       if (burningDone) {
         ctx.fillStyle = `rgba(0,0,0,${Math.min(fadeProgress,1)})`;
-        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     
-      // 處理粒子消失
+      // 清掉死掉的粒子
       for (let i = particles.length - 1; i >= 0; i--) {
         if (particles[i].life <= 0) particles.splice(i, 1);
       }
     
-      if (fadeProgress < 1.5) { // 等到黑到看不見
+      if (fadeProgress < 1.5) {
         burnRAF = requestAnimationFrame(burnStep);
       } else {
         setTimeout(() => {
@@ -207,7 +216,6 @@
         }, 300);
       }
     }
-
     document.getElementById('burnBtn').addEventListener('click', () => {
       burnProgress = 0;
       particles.length = 0;
