@@ -151,7 +151,8 @@
         this.y = y;
         this.vx = (Math.random() - 0.5) * 4;
         this.vy = Math.random() * -4 - 2;
-        this.life = 1.0;
+        this.life = 0.6 + (50 - this.size) / 50; // 火焰越小活得越久
+        this.size = 20 + Math.random() * 30;  // 🔥 粒子大小 20~50px之間隨機
       }
       update() {
         this.x += this.vx;
@@ -161,7 +162,7 @@
       draw() {
         if (fireImg.complete) {
           ctx.globalAlpha = Math.max(this.life, 0);
-          ctx.drawImage(fireImg, this.x - 16, this.y - 16, 32, 32);
+          ctx.drawImage(fireImg, this.x - this.size/2, this.y - this.size/2, this.size, this.size);
           ctx.globalAlpha = 1;
         }
       }
