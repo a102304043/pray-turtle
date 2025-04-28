@@ -136,12 +136,13 @@
       renderScene();
     });
 
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      turtles.length = 0;
-      particles.length = 0;
+    document.getElementById('burnBtn').addEventListener('click', () => {
       burnProgress = 0;
+      fadeProgress = 0;
+      burningDone = false;
+      particles.length = 0;
       cancelAnimationFrame(burnRAF);
-      renderScene();
+      burnStep();
     });
 
     // 火焰粒子系統
