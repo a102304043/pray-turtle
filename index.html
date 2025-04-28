@@ -170,11 +170,11 @@
     let burnProgress = 0;
     let burnRAF;
     function burnStep() {
-      burnProgress += 0.01;
+      burnProgress += 0.005;
       if (burnProgress >= 1) burnProgress = 1;
 
       // 產生新粒子
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         particles.push(new Particle(
           sunPos.x + (Math.random() - 0.5) * 500,
           sunPos.y + (Math.random() - 0.5) * 500
