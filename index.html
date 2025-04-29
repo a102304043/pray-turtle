@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v2.2</title>
+  <title>燒烏龜祈晴 v2.3</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
@@ -164,18 +164,34 @@ function burnStep(timestamp) {
 function getRandomX() { return canvas.width * Math.random(); }
 function getRandomY() { return TEXT_BOTTOM_Y + 20 + (canvas.height-TEXT_BOTTOM_Y-140)*Math.random(); }
 
-document.getElementById('drawBtn').addEventListener('click',()=>{
-  // 混合模式下，每次重來或切換模式後需重置太陽樣式
-  if (document.getElementById('styleSelect').value !== 'mix') randomSunStyle = null;
+document.getElementById('drawBtn').addEventListener('click', () => {
   const mode = document.getElementById('styleSelect').value;
-  let style = mode;
+
+  // 決定並鎖定混合模式的太陽風格
   if (mode === 'mix') {
-    style = randomSunStyle || (Math.random()<0.5?'orig':'hand');
+    if (randomSunStyle === null) {
+      randomSunStyle = Math.random() < 0.5 ? 'orig' : 'hand';
+    }
+  } else {
+    randomSunStyle = null; // 非混合模式時不保留
   }
-  const x = getRandomX(), y = getRandomY();
-  const size = 80 + Math.random()*100;
-  turtles.push(new Turtle(x,y,size,style));
+
+  // 每次隨機決定烏龜風格（與太陽獨立）
+  let turtleStyle;
+  if (mode === 'orig') {
+    turtleStyle = 'orig';
+  } else if (mode === 'hand') {
+    turtleStyle = 'hand';
+  } else {
+    turtleStyle = Math.random() < 0.5 ? 'orig' : 'hand';
+  }
+
+  const x = getRandomX();
+  const y = getRandomY();
+  const size = 80 + Math.random() * 100;
+  turtles.push(new Turtle(x, y, size, turtleStyle));
   renderScene();
+});
 });
 
 document.getElementById('burnBtn').addEventListener('click',()=>{
