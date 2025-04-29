@@ -2,13 +2,13 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 – 地面排列版 v1.1</title>
+  <title>燒烏龜祈晴 – 地面排列版 v1.2</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
-    label { font-size: 1.1rem; }
-    input { margin-left: 6px; padding: 8px 12px; font-size: 1.1rem; border: 1px solid #ccc; border-radius: 6px; }
-    button { padding: 14px 28px; font-size: 1.4rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; background: #4caf50; color: #fff; transition: background .2s; }
+    label { font-size: 1.2rem; }
+    input { margin-left: 6px; padding: 10px 16px; font-size: 1.2rem; border: 1px solid #ccc; border-radius: 6px; }
+    button { padding: 18px 36px; font-size: 1.6rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; background: #4caf50; color: #fff; transition: background .2s; }
     button:hover { background: #43a047; }
     #burnBtn { background: #e65100; }
     #burnBtn:hover { background: #bf360c; }
@@ -104,7 +104,7 @@
       this.y = y;
       this.vx = (Math.random() - 0.5) * 4;
       this.vy = Math.random() * -4 - 2;
-      this.size = 20 + Math.random() * 60;
+      this.size = 40 + Math.random() * 100; // 火焰變大
       this.life = 0.8 + Math.random() * 0.8;
     }
     update() {
@@ -152,7 +152,7 @@
     const groundY = canvas.height - 100;
     const x = 50 + Math.random() * (canvas.width - 100);
     const y = groundY + Math.random() * 50;
-    const size = 40 + Math.random() * 60;
+    const size = 80 + Math.random() * 100; // 烏龜變大
     const facingRight = x < canvas.width / 2;
     turtles.push(new Turtle(x, y, size, facingRight));
     renderScene();
