@@ -2,13 +2,13 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v2.2</title>
+  <title>燒烏龜祈晴 v2.3</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
-    label, select { font-size: 1.2rem; }
-    input { margin-left: 6px; padding: 10px 16px; font-size: 1.2rem; border: 1px solid #ccc; border-radius: 6px; }
-    button { padding: 18px 36px; font-size: 1.6rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; background: #4caf50; color: #fff; transition: background .2s; }
+    label, select { font-size: 1.4rem; }
+    input { margin-left: 6px; padding: 14px 20px; font-size: 1.3rem; border: 1px solid #ccc; border-radius: 6px; }
+    button { padding: 24px 48px; font-size: 1.8rem; font-weight: 700; border: none; border-radius: 16px; cursor: pointer; background: #4caf50; color: #fff; transition: background .2s; }
     button:hover { background: #43a047; }
     #burnBtn { background: #e65100; }
     #burnBtn:hover { background: #bf360c; }
@@ -19,9 +19,9 @@
 </head>
 <body>
   <div id="controls">
-    <label>日期 <input id="dateInput" type="date" value="2025-05-06"></label></label>
-    <label>時間 <input id="timeInput" type="time" value="13:00"></label></label>
-    <label>地點 <input id="locInput" type="text" value="基隆潮境公園"></label></label>
+    <label>日期 <input id="dateInput" type="date" value="2025-05-06"></label>
+    <label>時間 <input id="timeInput" type="time" value="13:00"></label>
+    <label>地點 <input id="locInput" type="text" value="基隆潮境公園"></label>
     <label>風格 
       <select id="styleSelect">
         <option value="orig">一般</option>
@@ -47,7 +47,6 @@ const sunPos = { x: canvas.width / 2, y: canvas.height * 0.13, r: 120 };
 const TEXT_OFFSET = 20;
 const TEXT_BOTTOM_Y = sunPos.y + sunPos.r + TEXT_OFFSET + 32;
 
-// 影像資源
 const turtleImg = new Image(); turtleImg.src = 'turtle.png';
 const sunImg = new Image(); sunImg.src = 'sun.png';
 const fireImg = new Image(); fireImg.src = 'fire.png';
@@ -78,7 +77,6 @@ function drawTurtle(inst) {
   let style = inst.style;
   let facing = inst.facingRight;
   if (style === 'hand') {
-    // 左半邊朝右，右半邊朝左
     facing = x > sunPos.x;
   }
   const img = style === 'hand' ? turtleHandImg : turtleImg;
@@ -166,8 +164,6 @@ function getRandomY() { return TEXT_BOTTOM_Y + 20 + (canvas.height-TEXT_BOTTOM_Y
 
 document.getElementById('drawBtn').addEventListener('click', () => {
   const mode = document.getElementById('styleSelect').value;
-
-  // 在混合模式下，如尚未決定太陽風格則隨機一次；一般/手繪模式則清空鎖定值
   if (mode === 'mix') {
     if (randomSunStyle === null) {
       randomSunStyle = Math.random() < 0.5 ? 'orig' : 'hand';
@@ -175,8 +171,10 @@ document.getElementById('drawBtn').addEventListener('click', () => {
   } else {
     randomSunStyle = null;
   }
-
-  // 每隻烏龜獨立隨機（只在混合模式）
+  if (turtles.length >= 100) {
+    alert("烏龜已達上限 (100 隻)");
+    return;
+  }
   let turtleStyle;
   if (mode === 'orig') {
     turtleStyle = 'orig';
@@ -185,7 +183,6 @@ document.getElementById('drawBtn').addEventListener('click', () => {
   } else {
     turtleStyle = Math.random() < 0.5 ? 'orig' : 'hand';
   }
-
   const x = getRandomX();
   const y = getRandomY();
   const size = 80 + Math.random() * 100;
