@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
   <title>燒烏龜祈晴</title>
@@ -28,31 +29,166 @@
   <canvas id="paper" width="800" height="800"></canvas>
 <script>
   const canvas = document.getElementById('paper');
-  const ctx = canvas.getContext('2d');// 烏龜與火焰粒子、場景資料 const turtles = []; const particles = []; // 太陽稍微下移到 13% 高度，維持偏上 const sunPos = { x: canvas.width / 2, y: canvas.height * 0.13, r: 120 }; // 文字距離太陽底部 20px const TEXT_OFFSET = 20;
+  const ctx = canvas.getContext('2d');
 
-// 圖片載入 const turtleImg = new Image(); turtleImg.src = 'turtle.png'; const sunImg    = new Image(); sunImg.src    = 'sun.png'; const fireImg   = new Image(); fireImg.src   = 'fire.png';
+  // 烏龜與火焰粒子、場景資料
+  const turtles = [];
+  const particles = [];
+  const sunPos = { x: canvas.width / 2, y: canvas.height * 0.1, r: 120 };
 
-// 畫布底色 function drawPaperBG() { ctx.fillStyle = '#FFFFF0'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+  // 圖片載入
+  const turtleImg = new Image(); turtleImg.src = 'turtle.png';
+  const sunImg    = new Image(); sunImg.src    = 'sun.png';
+  const fireImg   = new Image(); fireImg.src   = 'fire.png';
 
-// 畫太陽 (置中偏上) function drawSun() { if (sunImg.complete) { ctx.drawImage( sunImg, sunPos.x - sunPos.r, sunPos.y - sunPos.r, sunPos.r * 2, sunPos.r * 2 ); } }
+  // 畫布底色
+  function drawPaperBG() {
+    ctx.fillStyle = '#FFFFF0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 
-// 畫烏龜，facingRight 決定水平翻轉 function drawTurtle(x, y, size, facingRight) { ctx.save(); ctx.translate(x, y); if (facingRight) ctx.scale(-1, 1); if (turtleImg.complete) { ctx.drawImage(turtleImg, -size/2, -size/2, size, size); } ctx.restore(); }
+  // 畫太陽 (置中偏上)
+  function drawSun() {
+    if (sunImg.complete) {
+      ctx.drawImage(
+        sunImg,
+        sunPos.x - sunPos.r,
+        sunPos.y - sunPos.r,
+        sunPos.r * 2,
+        sunPos.r * 2
+      );
+    }
+  }
 
-class Turtle { constructor(x, y, size, facingRight) { this.x = x; this.y = y; this.size = size; this.facingRight = facingRight; } draw() { drawTurtle(this.x, this.y, this.size, this.facingRight); } }
+  // 畫烏龜，facingRight 決定水平翻轉
+  function drawTurtle(x, y, size, facingRight) {
+    ctx.save();
+    ctx.translate(x, y);
+    if (facingRight) ctx.scale(-1, 1);
+    if (turtleImg.complete) {
+      ctx.drawImage(turtleImg, -size/2, -size/2, size, size);
+    }
+    ctx.restore();
+  }
 
-// 畫日期、時間、地點文字（太陽正下方） function drawFooter() { const d = document.getElementById('dateInput').value || 'YYYY-MM-DD'; const t = document.getElementById('timeInput').value   || 'HH:MM'; const l = document.getElementById('locInput').value    || '地點'; ctx.fillStyle = '#000'; ctx.font = '28px sans-serif'; ctx.textAlign = 'center'; const textY = sunPos.y + sunPos.r + TEXT_OFFSET; ctx.fillText(${d}  ${t}, canvas.width/2, textY); ctx.fillText(l, canvas.width/2, textY + 32); }
+  class Turtle {
+    constructor(x, y, size, facingRight) {
+      this.x = x;
+      this.y = y;
+      this.size = size;
+      this.facingRight = facingRight;
+    }
+    draw() {
+      drawTurtle(this.x, this.y, this.size, this.facingRight);
+    }
+  }
 
-// 整合場景渲染 function renderScene() { drawPaperBG(); drawSun(); turtles.forEach(t => t.draw()); drawFooter(); }
+  // 畫日期、時間、地點文字
+  function drawFooter() {
+    const d = document.getElementById('dateInput').value || 'YYYY-MM-DD';
+    const t = document.getElementById('timeInput').value   || 'HH:MM';
+    const l = document.getElementById('locInput').value    || '地點';
+    ctx.fillStyle = '#000';
+    ctx.font = '28px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${d}  ${t}`, canvas.width/2, canvas.height - 60);
+    ctx.fillText(l, canvas.width/2, canvas.height - 20);
+  }
 
-// 火焰粒子系統 class Particle { constructor(x, y) { this.x = x; this.y = y; this.vx = (Math.random() - 0.5) * 4; this.vy = Math.random() * -4 - 2; this.size = 20 + Math.random() * 60; this.life = 0.8 + Math.random() * 0.8; } update() { this.x += this.vx; this.y += this.vy; this.life -= 0.02; } draw() { if (fireImg.complete) { ctx.globalAlpha = Math.max(this.life, 0); ctx.drawImage(fireImg, this.x - this.size/2, this.y - this.size/2, this.size, this.size); ctx.globalAlpha = 1; } } }
+  // 整合場景渲染
+  function renderScene() {
+    drawPaperBG();
+    drawSun();
+    turtles.forEach(t => t.draw());
+    drawFooter();
+  }
 
-let burnProgress = 0, fadeProgress = 0, burningDone = false, burnRAF; function burnStep() { if (!burningDone) { burnProgress += 0.005; if (burnProgress >= 1) burningDone = true; } else { fadeProgress += 0.01; } for (let i = 0; i < 8; i++) { const x = Math.random() * canvas.width; const y = Math.random() * canvas.height; particles.push(new Particle(x, y)); } particles.forEach(p => p.update()); renderScene(); particles.forEach(p => p.draw()); for (let i = particles.length - 1; i >= 0; i--) { if (particles[i].life <= 0) particles.splice(i, 1); } if (burningDone) { ctx.fillStyle = rgba(0,0,0,${Math.min(fadeProgress, 1)}); ctx.fillRect(0, 0, canvas.width, canvas.height); } if (fadeProgress < 1.5) burnRAF = requestAnimationFrame(burnStep); else setTimeout(() => alert('🔥 祈晴儀式完成！願天氣放晴！'), 300); }
+  // 火焰粒子系統
+  class Particle {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.vx = (Math.random() - 0.5) * 4;
+      this.vy = Math.random() * -4 - 2;
+      this.size = 20 + Math.random() * 60;
+      this.life = 0.8 + Math.random() * 0.8;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.life -= 0.02;
+    }
+    draw() {
+      if (fireImg.complete) {
+        ctx.globalAlpha = Math.max(this.life, 0);
+        ctx.drawImage(fireImg, this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
 
-// 事件綁定：畫烏龜按鈕 document.getElementById('drawBtn').addEventListener('click', () => { const groundY = canvas.height - 100; const x = 50 + Math.random() * (canvas.width - 100); const y = groundY + Math.random() * 50; const size = 40 + Math.random() * 60; const facingRight = x < canvas.width / 2; turtles.push(new Turtle(x, y, size, facingRight)); renderScene(); });
+  let burnProgress = 0, fadeProgress = 0, burningDone = false, burnRAF;
+  function burnStep() {
+    if (!burningDone) {
+      burnProgress += 0.005;
+      if (burnProgress >= 1) burningDone = true;
+    } else {
+      fadeProgress += 0.01;
+    }
+    // 全畫布隨機火焰
+    for (let i = 0; i < 8; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      particles.push(new Particle(x, y));
+    }
+    particles.forEach(p => p.update());
+    renderScene();
+    particles.forEach(p => p.draw());
+    // 清除已消逝的粒子
+    for (let i = particles.length - 1; i >= 0; i--) {
+      if (particles[i].life <= 0) particles.splice(i, 1);
+    }
+    if (burningDone) {
+      ctx.fillStyle = `rgba(0,0,0,${Math.min(fadeProgress, 1)})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    if (fadeProgress < 1.5) burnRAF = requestAnimationFrame(burnStep);
+    else setTimeout(() => alert('🔥 祈晴儀式完成！願天氣放晴！'), 300);
+  }
 
-// 燒紙按鈕 document.getElementById('burnBtn').addEventListener('click', () => { burnProgress = fadeProgress = 0; burningDone = false; particles.length = 0; cancelAnimationFrame(burnRAF); burnStep(); });
+  // 事件綁定：畫烏龜按鈕
+  document.getElementById('drawBtn').addEventListener('click', () => {
+    const groundY = canvas.height - 100;
+    const x = 50 + Math.random() * (canvas.width - 100);
+    const y = groundY + Math.random() * 50;
+    const size = 40 + Math.random() * 60;
+    const facingRight = x < canvas.width / 2;
+    turtles.push(new Turtle(x, y, size, facingRight));
+    renderScene();
+  });
 
-// 重來按鈕 document.getElementById('resetBtn').addEventListener('click', () => { turtles.length = 0; particles.length = 0; burnProgress = fadeProgress = 0; burningDone = false; cancelAnimationFrame(burnRAF); ctx.clearRect(0, 0, canvas.width, canvas.height); renderScene(); });
+  // 燒紙按鈕
+  document.getElementById('burnBtn').addEventListener('click', () => {
+    burnProgress = fadeProgress = 0;
+    burningDone = false;
+    particles.length = 0;
+    cancelAnimationFrame(burnRAF);
+    burnStep();
+  });
 
-// 初始渲
+  // 重來按鈕
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    turtles.length = 0;
+    particles.length = 0;
+    burnProgress = fadeProgress = 0;
+    burningDone = false;
+    cancelAnimationFrame(burnRAF);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    renderScene();
+  });
 
+  // 初始渲染
+  renderScene();
+</script>
+</body>
+</html>
