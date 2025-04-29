@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v2.2</title>
+  <title>燒烏龜祈晴 v2.3</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
@@ -147,49 +147,9 @@ function burnStep(timestamp) {
   const elapsed = (timestamp - burnStartTime)/1000;
   ctx.clearRect(0,0,canvas.width,canvas.height);
   renderScene();
-  if (particles.length<80) {
-    for (let i=0;i<4;i++) particles.push(new Particle(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()<0.3));
-  }
-  particles.forEach(p=>p.update());
-  particles.forEach(p=>p.draw());
-  particles = particles.filter(p=>p.life>0);
-  if (elapsed<10) {
-    burnRAF = requestAnimationFrame(burnStep);
-  } else {
-    ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
-    setTimeout(()=>alert('🔥 祈晴儀式完成！願天氣放晴！'),300);
-  }
-}
-
-function getRandomX() { return canvas.width * Math.random(); }
-function getRandomY() { return TEXT_BOTTOM_Y + 20 + (canvas.height-TEXT_BOTTOM_Y-140)*Math.random(); }
-
-document.getElementById('drawBtn').addEventListener('click', () => {
-  const mode = document.getElementById('styleSelect').value;
-  // 混合模式下首次決定太陽樣式，並在非混合時重置
-  if (mode !== 'mix') {
-    randomSunStyle = null;
-  } else if (!randomSunStyle) {
-    randomSunStyle = Math.random() < 0.5 ? 'orig' : 'hand';
-  }
-  // 烏龜風格（混合模式下每次隨機）
-  let turtleStyle;
-  if (mode === 'orig') {
-    turtleStyle = 'orig';
-  } else if (mode === 'hand') {
-    turtleStyle = 'hand';
-  } else {
-    turtleStyle = Math.random() < 0.5 ? 'orig' : 'hand';
-  }
-  const x = getRandomX();
-  const y = getRandomY();
-  const size = 80 + Math.random() * 100;
-  turtles.push(new Turtle(x, y, size, turtleStyle));
-  renderScene();
-});
 });
 
-document.getElementById('burnBtn').addEventListener('click',()=>{
+document.getElementById('burnBtn'').addEventListener('click',()=>{
   particles=[]; burnStartTime=null;
   cancelAnimationFrame(burnRAF);
   requestAnimationFrame(burnStep);
