@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v2.3</title>
+  <title>燒烏龜祈晴 v2.2</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
@@ -167,16 +167,16 @@ function getRandomY() { return TEXT_BOTTOM_Y + 20 + (canvas.height-TEXT_BOTTOM_Y
 document.getElementById('drawBtn').addEventListener('click', () => {
   const mode = document.getElementById('styleSelect').value;
 
-  // 決定並鎖定混合模式的太陽風格
+  // 在混合模式下，如尚未決定太陽風格則隨機一次；一般/手繪模式則清空鎖定值
   if (mode === 'mix') {
     if (randomSunStyle === null) {
       randomSunStyle = Math.random() < 0.5 ? 'orig' : 'hand';
     }
   } else {
-    randomSunStyle = null; // 非混合模式時不保留
+    randomSunStyle = null;
   }
 
-  // 每次隨機決定烏龜風格（與太陽獨立）
+  // 每隻烏龜獨立隨機（只在混合模式）
   let turtleStyle;
   if (mode === 'orig') {
     turtleStyle = 'orig';
@@ -191,7 +191,6 @@ document.getElementById('drawBtn').addEventListener('click', () => {
   const size = 80 + Math.random() * 100;
   turtles.push(new Turtle(x, y, size, turtleStyle));
   renderScene();
-});
 });
 
 document.getElementById('burnBtn').addEventListener('click',()=>{
