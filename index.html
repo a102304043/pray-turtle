@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v1.3</title>
+  <title>燒烏龜祈晴 v1.4</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
@@ -35,6 +35,7 @@
   const particles = [];
   const sunPos = { x: canvas.width / 2, y: canvas.height * 0.13, r: 120 };
   const TEXT_OFFSET = 20;
+  const TEXT_BOTTOM_Y = sunPos.y + sunPos.r + TEXT_OFFSET + 32;
 
   const turtleImg = new Image(); turtleImg.src = 'turtle.png';
   const sunImg    = new Image(); sunImg.src    = 'sun.png';
@@ -150,9 +151,9 @@
   }
 
   document.getElementById('drawBtn').addEventListener('click', () => {
-    const groundY = canvas.height - 100;
-    const x = 50 + Math.random() * (canvas.width - 100);
-    const y = groundY + Math.random() * 50;
+    const marginX = 120;
+    const x = marginX + Math.random() * (canvas.width - 2 * marginX);
+    const y = TEXT_BOTTOM_Y + 20 + Math.random() * (canvas.height - TEXT_BOTTOM_Y - 140);
     const size = 80 + Math.random() * 100;
     const facingRight = x < canvas.width / 2;
     turtles.push(new Turtle(x, y, size, facingRight));
