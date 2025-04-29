@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 – 全畫布燃燒版</title>
+  <title>燒烏龜祈晴</title>
   <style>
     body{font-family:"Noto Sans TC",Arial,sans-serif;margin:0;display:flex;flex-direction:column;align-items:center;background:#fafafa}
     #controls{display:flex;gap:1rem;padding:1rem;flex-wrap:wrap;justify-content:center}
@@ -73,15 +73,19 @@ function burnStep(){
 }
 
 /* ---------- 事件 ---------- */
-document.getElementById('drawBtn').addEventListener('click',()=>{
-  let x,y,tries=0; do{ x=Math.random()*(canvas.width-100)+50; y=Math.random()*(canvas.height-200)+50; }
-  while(Math.hypot(x-sunPos.x,y-sunPos.y)<sunPos.r+80 && ++tries<20);
-  const size = 40 + Math.random() * 60;
-  // 計算角度使烏龜頭(圖片上方)朝向太陽
-  // 原始烏龜圖片頭朝向「左」(-X)，故需再偏移 -π 使頭指向太陽
-  const ang  = Math.atan2(sunPos.y - y, sunPos.x - x) + Math.PI;
-  turtles.push(new Turtle(x,y,ang,size)); renderScene();
-});
+// 畫烏龜
+  document.getElementById('drawBtn').addEventListener('click',()=>{
+    // 固定在地面(底部100px範圍內隨機)
+    const groundY = canvas.height - 100;
+    const x = 50 + Math.random() * (canvas.width - 100);
+    const y = groundY + Math.random() * 50;
+    // 隨機尺寸40~100
+    const size = 40 + Math.random() * 60;
+    // 烏龜圖片原始頭朝左，角度補正180度，使頭朝向太陽
+    const ang = Math.atan2(sunPos.y - y, sunPos.x - x) + Math.PI;
+    turtles.push(new Turtle(x, y, ang, size));
+    renderScene();
+  });
 
 document.getElementById('burnBtn').addEventListener('click',()=>{
   burnProgress=fadeProgress=0; burningDone=false; particles.length=0; cancelAnimationFrame(burnRAF); burnStep();
