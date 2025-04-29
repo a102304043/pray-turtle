@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v1.4</title>
+  <title>燒烏龜祈晴 v1.6</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
@@ -32,7 +32,7 @@
   const ctx = canvas.getContext('2d');
 
   const turtles = [];
-  const particles = [];
+  let particles = [];
   const sunPos = { x: canvas.width / 2, y: canvas.height * 0.13, r: 120 };
   const TEXT_OFFSET = 20;
   const TEXT_BOTTOM_Y = sunPos.y + sunPos.r + TEXT_OFFSET + 32;
@@ -123,25 +123,25 @@
   }
 
   let burnProgress = 0, fadeProgress = 0, burningDone = false, burnRAF;
-  function burnStep() {
+  function burnStep(timestamp) {
     if (!burningDone) {
       burnProgress += 0.005;
       if (burnProgress >= 1) burningDone = true;
     } else {
       fadeProgress += 0.01;
     }
-    for (let i = 0; i < 8; i++) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      const glow = Math.random() < 0.5;
-      particles.push(new Particle(x, y, glow));
+    if (particles.length < 500) {
+      for (let i = 0; i < 8; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const glow = Math.random() < 0.5;
+        particles.push(new Particle(x, y, glow));
+      }
     }
     particles.forEach(p => p.update());
     renderScene();
     particles.forEach(p => p.draw());
-    for (let i = particles.length - 1; i >= 0; i--) {
-      if (particles[i].life <= 0) particles.splice(i, 1);
-    }
+    particles = particles.filter(p => p.life > 0);
     if (burningDone) {
       ctx.fillStyle = `rgba(0,0,0,${Math.min(fadeProgress, 1)})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -150,10 +150,17 @@
     else setTimeout(() => alert('🔥 祈晴儀式完成！願天氣放晴！'), 300);
   }
 
+  function getRandomDispersedX() {
+    return canvas.width * (Math.random() * 0.9 + 0.05);
+  }
+
+  function getRandomDispersedY() {
+    return TEXT_BOTTOM_Y + 20 + (canvas.height - TEXT_BOTTOM_Y - 140) * Math.random();
+  }
+
   document.getElementById('drawBtn').addEventListener('click', () => {
-    const marginX = 120;
-    const x = marginX + Math.random() * (canvas.width - 2 * marginX);
-    const y = TEXT_BOTTOM_Y + 20 + Math.random() * (canvas.height - TEXT_BOTTOM_Y - 140);
+    const x = getRandomDispersedX();
+    const y = getRandomDispersedY();
     const size = 80 + Math.random() * 100;
     const facingRight = x < canvas.width / 2;
     turtles.push(new Turtle(x, y, size, facingRight));
@@ -163,14 +170,14 @@
   document.getElementById('burnBtn').addEventListener('click', () => {
     burnProgress = fadeProgress = 0;
     burningDone = false;
-    particles.length = 0;
+    particles = [];
     cancelAnimationFrame(burnRAF);
     burnStep();
   });
 
   document.getElementById('resetBtn').addEventListener('click', () => {
     turtles.length = 0;
-    particles.length = 0;
+    particles = [];
     burnProgress = fadeProgress = 0;
     burningDone = false;
     cancelAnimationFrame(burnRAF);
