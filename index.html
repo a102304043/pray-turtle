@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 – 地面排列版 v1.2</title>
+  <title>燒烏龜祈晴 v1.3</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
@@ -47,13 +47,7 @@
 
   function drawSun() {
     if (sunImg.complete) {
-      ctx.drawImage(
-        sunImg,
-        sunPos.x - sunPos.r,
-        sunPos.y - sunPos.r,
-        sunPos.r * 2,
-        sunPos.r * 2
-      );
+      ctx.drawImage(sunImg, sunPos.x - sunPos.r, sunPos.y - sunPos.r, sunPos.r * 2, sunPos.r * 2);
     }
   }
 
@@ -99,13 +93,14 @@
   }
 
   class Particle {
-    constructor(x, y) {
+    constructor(x, y, glow = false) {
       this.x = x;
       this.y = y;
       this.vx = (Math.random() - 0.5) * 4;
       this.vy = Math.random() * -4 - 2;
-      this.size = 40 + Math.random() * 100; // 火焰變大
+      this.size = 40 + Math.random() * 100;
       this.life = 0.8 + Math.random() * 0.8;
+      this.glow = glow;
     }
     update() {
       this.x += this.vx;
@@ -115,8 +110,13 @@
     draw() {
       if (fireImg.complete) {
         ctx.globalAlpha = Math.max(this.life, 0);
+        if (this.glow) {
+          ctx.shadowColor = 'orange';
+          ctx.shadowBlur = 25;
+        }
         ctx.drawImage(fireImg, this.x - this.size/2, this.y - this.size/2, this.size, this.size);
         ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
       }
     }
   }
@@ -132,7 +132,8 @@
     for (let i = 0; i < 8; i++) {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
-      particles.push(new Particle(x, y));
+      const glow = Math.random() < 0.5;
+      particles.push(new Particle(x, y, glow));
     }
     particles.forEach(p => p.update());
     renderScene();
@@ -152,7 +153,7 @@
     const groundY = canvas.height - 100;
     const x = 50 + Math.random() * (canvas.width - 100);
     const y = groundY + Math.random() * 50;
-    const size = 80 + Math.random() * 100; // 烏龜變大
+    const size = 80 + Math.random() * 100;
     const facingRight = x < canvas.width / 2;
     turtles.push(new Turtle(x, y, size, facingRight));
     renderScene();
