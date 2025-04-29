@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v1.7</title>
+  <title>燒烏龜祈晴 v1.8</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
@@ -97,10 +97,10 @@ class Particle {
   constructor(x, y, glow = false) {
     this.x = x;
     this.y = y;
-    this.vx = (Math.random() - 0.5) * 4;
-    this.vy = Math.random() * -4 - 2;
-    this.size = 40 + Math.random() * 100;
-    this.life = 0.8 + Math.random() * 0.8;
+    this.vx = (Math.random() - 0.5) * 2;
+    this.vy = Math.random() * -2 - 1;
+    this.size = 20 + Math.random() * 40;
+    this.life = 0.5 + Math.random() * 0.5;
     this.glow = glow;
   }
   update() {
@@ -113,7 +113,7 @@ class Particle {
       ctx.globalAlpha = Math.max(this.life, 0);
       if (this.glow) {
         ctx.shadowColor = 'orange';
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 15;
       }
       ctx.drawImage(fireImg, this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
       ctx.globalAlpha = 1;
@@ -122,41 +122,21 @@ class Particle {
   }
 }
 
-let burnProgress = 0, fadeProgress = 0, burningDone = false, burnRAF;
+let burnRAF;
 function burnStep() {
   burnRAF = requestAnimationFrame(burnStep);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  renderScene();
 
-  if (!burningDone) {
-    burnProgress += 0.005;
-    if (burnProgress >= 1) burningDone = true;
-  } else {
-    fadeProgress += 0.01;
-  }
-
-  for (let i = 0; i < 6; i++) {
-    if (particles.length < 200) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      const glow = Math.random() < 0.5;
-      particles.push(new Particle(x, y, glow));
+  if (particles.length < 100) {
+    for (let i = 0; i < 4; i++) {
+      particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() < 0.3));
     }
   }
 
   particles.forEach(p => p.update());
-  renderScene();
   particles.forEach(p => p.draw());
   particles = particles.filter(p => p.life > 0);
-
-  if (burningDone) {
-    ctx.fillStyle = `rgba(0,0,0,${Math.min(fadeProgress, 1)})`;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-
-  if (fadeProgress >= 1.5) {
-    cancelAnimationFrame(burnRAF);
-    setTimeout(() => alert('🔥 祈晴儀式完成！願天氣放晴！'), 300);
-  }
 }
 
 function getRandomDispersedX() {
@@ -177,8 +157,6 @@ document.getElementById('drawBtn').addEventListener('click', () => {
 });
 
 document.getElementById('burnBtn').addEventListener('click', () => {
-  burnProgress = fadeProgress = 0;
-  burningDone = false;
   particles = [];
   cancelAnimationFrame(burnRAF);
   burnStep();
@@ -187,8 +165,6 @@ document.getElementById('burnBtn').addEventListener('click', () => {
 document.getElementById('resetBtn').addEventListener('click', () => {
   turtles.length = 0;
   particles = [];
-  burnProgress = fadeProgress = 0;
-  burningDone = false;
   cancelAnimationFrame(burnRAF);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   renderScene();
