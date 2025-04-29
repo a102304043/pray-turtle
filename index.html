@@ -2,19 +2,19 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v2.3</title>
+  <title>燒烏龜祈晴 v2.3-fix</title>
   <style>
-    body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
-    #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
-    label, select { font-size: 1.2rem; }
-    input { margin-left: 6px; padding: 10px 16px; font-size: 1.2rem; border: 1px solid #ccc; border-radius: 6px; }
-    button { padding: 18px 36px; font-size: 1.6rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; background: #4caf50; color: #fff; transition: background .2s; }
-    button:hover { background: #43a047; }
-    #burnBtn { background: #e65100; }
-    #burnBtn:hover { background: #bf360c; }
-    #resetBtn { background: #546e7a; }
-    #resetBtn:hover { background: #37474f; }
-    canvas { border: 3px solid #ccc; box-shadow: 0 6px 15px rgba(0,0,0,.2); margin-bottom: 1rem; }
+    body{font-family:"Noto Sans TC",Arial,sans-serif;margin:0;display:flex;flex-direction:column;align-items:center;background:#fafafa}
+    #controls{display:flex;gap:1rem;padding:1rem;flex-wrap:wrap;justify-content:center}
+    label,select{font-size:1.2rem}
+    input{margin-left:6px;padding:10px 16px;font-size:1.2rem;border:1px solid #ccc;border-radius:6px}
+    button{padding:18px 36px;font-size:1.6rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;background:#4caf50;color:#fff;transition:background .2s}
+    button:hover{background:#43a047}
+    #burnBtn{background:#e65100}
+    #burnBtn:hover{background:#bf360c}
+    #resetBtn{background:#546e7a}
+    #resetBtn:hover{background:#37474f}
+    canvas{border:3px solid #ccc;box-shadow:0 6px 15px rgba(0,0,0,.2);margin-bottom:1rem}
   </style>
 </head>
 <body>
@@ -22,7 +22,7 @@
     <label>日期 <input id="dateInput" type="date"></label>
     <label>時間 <input id="timeInput" type="time"></label>
     <label>地點 <input id="locInput" type="text" placeholder="祈晴地點"></label>
-    <label>風格 
+    <label>風格
       <select id="styleSelect">
         <option value="orig">一般</option>
         <option value="hand">手繪</option>
@@ -34,134 +34,161 @@
     <button id="resetBtn">重來 ↺</button>
   </div>
   <canvas id="paper" width="800" height="800"></canvas>
+
 <script>
+/* ---------- 主要修正 ---------- *
+1. 移除 burnStep 內多餘的「)」，並讓 burnStep 自己排程下一幀
+2. burnBtn 事件選取器多了一個引號，修正為 'burnBtn'
+3. 讓 burnRAF 正確儲存 requestAnimationFrame 代號
+4. 新增 drawBtn 事件，才能真正把烏龜畫到畫布
+* -------------------------------- */
+
 const canvas = document.getElementById('paper');
 const ctx = canvas.getContext('2d');
 
 const turtles = [];
 let particles = [];
-let burnRAF;
+let burnRAF = null;
 let burnStartTime = null;
 let randomSunStyle = null;
 const sunPos = { x: canvas.width / 2, y: canvas.height * 0.13, r: 120 };
 const TEXT_OFFSET = 20;
-const TEXT_BOTTOM_Y = sunPos.y + sunPos.r + TEXT_OFFSET + 32;
 
-// 影像資源
-const turtleImg = new Image(); turtleImg.src = 'turtle.png';
-const sunImg = new Image(); sunImg.src = 'sun.png';
-const fireImg = new Image(); fireImg.src = 'fire.png';
-const turtleHandImg = new Image(); turtleHandImg.src = 'turtle_hand.png';
-const sunHandImg = new Image(); sunHandImg.src = 'sun_hand.png';
-const fireHandImg = new Image(); fireHandImg.src = 'fire_hand.png';
+/* 影像資源 */
+const turtleImg      = new Image(); turtleImg.src      = 'turtle.png';
+const sunImg         = new Image(); sunImg.src         = 'sun.png';
+const fireImg        = new Image(); fireImg.src        = 'fire.png';
+const turtleHandImg  = new Image(); turtleHandImg.src  = 'turtle_hand.png';
+const sunHandImg     = new Image(); sunHandImg.src     = 'sun_hand.png';
+const fireHandImg    = new Image(); fireHandImg.src    = 'fire_hand.png';
 
-function drawPaperBG() {
+/* ---------- 通用繪圖 ---------- */
+function drawPaperBG(){
   ctx.fillStyle = '#FFFFF0';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 }
 
-function drawSun() {
-  const mode = document.getElementById('styleSelect').value;
+function drawSun(){
+  const mode  = document.getElementById('styleSelect').value;
   let style = mode;
-  if (mode === 'mix') {
-    if (!randomSunStyle) randomSunStyle = Math.random() < 0.5 ? 'orig' : 'hand';
+  if(mode==='mix'){
+    if(!randomSunStyle) randomSunStyle = Math.random()<0.5?'orig':'hand';
     style = randomSunStyle;
   }
-  const img = style === 'hand' ? sunHandImg : sunImg;
-  if (img.complete) {
-    ctx.drawImage(img, sunPos.x - sunPos.r, sunPos.y - sunPos.r, sunPos.r * 2, sunPos.r * 2);
-  }
+  const img = style==='hand'?sunHandImg:sunImg;
+  if(img.complete) ctx.drawImage(img,sunPos.x-sunPos.r,sunPos.y-sunPos.r,sunPos.r*2,sunPos.r*2);
 }
 
-function drawTurtle(inst) {
-  const { x, y, size } = inst;
-  let style = inst.style;
-  let facing = inst.facingRight;
-  if (style === 'hand') {
-    // 左半邊朝右，右半邊朝左
-    facing = x > sunPos.x;
-  }
-  const img = style === 'hand' ? turtleHandImg : turtleImg;
+function drawTurtle(inst){
+  const {x,y,size,style} = inst;
+  const facingRight = style==='hand' ? x>sunPos.x : inst.facingRight; //手繪模式強制朝太陽
+  const img = style==='hand'?turtleHandImg:turtleImg;
   ctx.save();
-  ctx.translate(x, y);
-  if (facing) ctx.scale(-1, 1);
-  if (img.complete) {
-    ctx.drawImage(img, -size/2, -size/2, size, size);
-  }
+  ctx.translate(x,y);
+  if(facingRight) ctx.scale(-1,1);
+  if(img.complete) ctx.drawImage(img,-size/2,-size/2,size,size);
   ctx.restore();
 }
 
-class Turtle {
-  constructor(x, y, size, style) {
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.style = style;
-    this.facingRight = x < canvas.width / 2;
-  }
-  draw() { drawTurtle(this); }
-}
-
-function drawFooter() {
+function drawFooter(){
   const d = document.getElementById('dateInput').value || 'YYYY-MM-DD';
   const t = document.getElementById('timeInput').value || 'HH:MM';
-  const l = document.getElementById('locInput').value || '地點';
-  ctx.fillStyle = '#000'; ctx.font = '28px sans-serif'; ctx.textAlign = 'center';
-  const textY = sunPos.y + sunPos.r + TEXT_OFFSET;
-  ctx.fillText(`${d}  ${t}`, canvas.width/2, textY);
-  ctx.fillText(l, canvas.width/2, textY + 32);
+  const l = document.getElementById('locInput').value  || '地點';
+  const y = sunPos.y + sunPos.r + TEXT_OFFSET;
+  ctx.fillStyle='#000'; ctx.font='28px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(`${d}  ${t}`,canvas.width/2,y);
+  ctx.fillText(l,canvas.width/2,y+32);
 }
 
-function renderScene() {
+function renderScene(){
   drawPaperBG();
   drawSun();
-  turtles.forEach(t => t.draw());
+  turtles.forEach(t=>drawTurtle(t));
   drawFooter();
 }
 
-class Particle {
-  constructor(x, y, glow) {
-    this.x = x;
-    this.y = y;
-    this.vx = (Math.random()-0.5)*3;
-    this.vy = Math.random()*-3-1;
-    this.size = 10 + Math.random()*300;
-    this.life = 0.4 + Math.random()*0.6;
-    this.glow = glow;
+/* ---------- 烏龜類 ---------- */
+class Turtle{
+  constructor(x,y,size,style){
+    this.x=x; this.y=y; this.size=size; this.style=style;
+    this.facingRight = x<canvas.width/2;
   }
-  update() { this.x += this.vx; this.y += this.vy; this.life -= 0.02; }
-  draw() {
-    const mode = document.getElementById('styleSelect').value;
-    const img = mode==='hand' ? fireHandImg : mode==='orig' ? fireImg : Math.random()<0.5?fireImg:fireHandImg;
-    if (img.complete) {
-      ctx.globalAlpha = Math.max(this.life,0);
-      if (this.glow) { ctx.shadowColor='orange'; ctx.shadowBlur=20; }
-      ctx.drawImage(img, this.x-this.size/2, this.y-this.size/2, this.size, this.size);
+}
+
+/* ---------- 火焰粒子 ---------- */
+class Particle{
+  constructor(x,y){
+    this.x=x; this.y=y;
+    this.vx=(Math.random()-0.5)*3;
+    this.vy=Math.random()*-3-1;
+    this.size=10+Math.random()*30;
+    this.life=0.4+Math.random()*0.6;
+  }
+  update(){ this.x+=this.vx; this.y+=this.vy; this.life-=0.02; }
+  draw(){
+    const mode=document.getElementById('styleSelect').value;
+    const img = mode==='hand'?fireHandImg:mode==='orig'?fireImg:Math.random()<0.5?fireImg:fireHandImg;
+    if(img.complete){
+      ctx.globalAlpha=Math.max(this.life,0);
+      ctx.shadowColor='orange'; ctx.shadowBlur=20;
+      ctx.drawImage(img,this.x-this.size/2,this.y-this.size/2,this.size,this.size);
       ctx.globalAlpha=1; ctx.shadowBlur=0;
     }
   }
 }
 
-function burnStep(timestamp) {
-  if (!burnStartTime) burnStartTime = timestamp;
-  const elapsed = (timestamp - burnStartTime)/1000;
+/* ---------- 動畫 ---------- */
+function burnStep(timestamp){
+  if(!burnStartTime) burnStartTime = timestamp;
   ctx.clearRect(0,0,canvas.width,canvas.height);
+  renderScene();
+
+  /* 生成與更新粒子 */
+  if(particles.length<200){
+    turtles.forEach(t=>{
+      particles.push(new Particle(t.x,t.y - t.size/2));
+    });
+  }
+  particles.forEach(p=>p.update());
+  particles = particles.filter(p=>p.life>0);
+  particles.forEach(p=>p.draw());
+
+  burnRAF = requestAnimationFrame(burnStep);
+}
+
+/* ---------- 事件 ---------- */
+/* 產生烏龜 */
+document.getElementById('drawBtn').addEventListener('click',()=>{
+  const mode = document.getElementById('styleSelect').value;
+  const count = 12;
+  const radius = canvas.width*0.4;
+  turtles.length = 0; // 清空
+  for(let i=0;i<count;i++){
+    const angle = Math.PI*1.2 + i*(Math.PI*0.6)/(count-1); // 左右各半
+    const x = canvas.width/2 + radius*Math.cos(angle);
+    const y = canvas.height*0.65 + radius*Math.sin(angle)*0.4;
+    const size = 80+Math.random()*40;
+    turtles.push(new Turtle(x,y,size,mode==='mix'?(Math.random()<0.5?'orig':'hand'):mode));
+  }
+  randomSunStyle=null; // 重新抽太陽
   renderScene();
 });
 
-document.getElementById('burnBtn'').addEventListener('click',()=>{
+/* 點火 */
+document.getElementById('burnBtn').addEventListener('click',()=>{
   particles=[]; burnStartTime=null;
   cancelAnimationFrame(burnRAF);
-  requestAnimationFrame(burnStep);
+  burnRAF = requestAnimationFrame(burnStep);
 });
 
+/* 重來 */
 document.getElementById('resetBtn').addEventListener('click',()=>{
   turtles.length=0; particles=[]; burnStartTime=null; randomSunStyle=null;
   cancelAnimationFrame(burnRAF);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
   renderScene();
 });
 
+/* 初始畫面 */
 renderScene();
 </script>
 </body>
