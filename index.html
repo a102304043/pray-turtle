@@ -2,11 +2,11 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v1.9</title>
+  <title>燒烏龜祈晴 v2.0</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
-    label { font-size: 1.2rem; }
+    label, select { font-size: 1.2rem; }
     input { margin-left: 6px; padding: 10px 16px; font-size: 1.2rem; border: 1px solid #ccc; border-radius: 6px; }
     button { padding: 18px 36px; font-size: 1.6rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; background: #4caf50; color: #fff; transition: background .2s; }
     button:hover { background: #43a047; }
@@ -22,6 +22,13 @@
     <label>日期 <input id="dateInput" type="date"></label>
     <label>時間 <input id="timeInput" type="time"></label>
     <label>地點 <input id="locInput" type="text" placeholder="祈晴地點"></label>
+    <label>風格 
+      <select id="styleSelect">
+        <option value="orig">一般</option>
+        <option value="hand">手繪</option>
+        <option value="mix">隨機混合</option>
+      </select>
+    </label>
     <button id="drawBtn">畫 🐢</button>
     <button id="burnBtn">燒 🔥</button>
     <button id="resetBtn">重來 ↺</button>
@@ -39,9 +46,18 @@ const sunPos = { x: canvas.width / 2, y: canvas.height * 0.13, r: 120 };
 const TEXT_OFFSET = 20;
 const TEXT_BOTTOM_Y = sunPos.y + sunPos.r + TEXT_OFFSET + 32;
 
+// 原始及手繪圖檔
 const turtleImg = new Image(); turtleImg.src = 'turtle.png';
 const sunImg = new Image(); sunImg.src = 'sun.png';
 const fireImg = new Image(); fireImg.src = 'fire.png';
+const turtleHandImg = new Image(); turtleHandImg.src = 'turtle_hand.png';
+const sunHandImg = new Image(); sunHandImg.src = 'sun_hand.png';
+const fireHandImg = new Image(); fireHandImg.src = 'fire_hand.png';
+
+// 取得使用者選擇的風格
+function getStyle() {
+  return document.getElementById('styleSelect').value;
+}
 
 function drawPaperBG() {
   ctx.fillStyle = '#FFFFF0';
@@ -49,31 +65,37 @@ function drawPaperBG() {
 }
 
 function drawSun() {
-  if (sunImg.complete) {
-    ctx.drawImage(sunImg, sunPos.x - sunPos.r, sunPos.y - sunPos.r, sunPos.r * 2, sunPos.r * 2);
+  const style = getStyle();
+  let img;
+  if (style === 'orig') img = sunImg;
+  else if (style === 'hand') img = sunHandImg;
+  else img = Math.random() < 0.5 ? sunImg : sunHandImg;
+  if (img.complete) {
+    ctx.drawImage(img, sunPos.x - sunPos.r, sunPos.y - sunPos.r, sunPos.r * 2, sunPos.r * 2);
   }
 }
 
 function drawTurtle(x, y, size, facingRight) {
+  const style = getStyle();
+  let img;
+  if (style === 'orig') img = turtleImg;
+  else if (style === 'hand') img = turtleHandImg;
+  else img = Math.random() < 0.5 ? turtleImg : turtleHandImg;
+
   ctx.save();
   ctx.translate(x, y);
   if (facingRight) ctx.scale(-1, 1);
-  if (turtleImg.complete) {
-    ctx.drawImage(turtleImg, -size/2, -size/2, size, size);
+  if (img.complete) {
+    ctx.drawImage(img, -size/2, -size/2, size, size);
   }
   ctx.restore();
 }
 
 class Turtle {
   constructor(x, y, size, facingRight) {
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.facingRight = facingRight;
+    this.x = x; this.y = y; this.size = size; this.facingRight = facingRight;
   }
-  draw() {
-    drawTurtle(this.x, this.y, this.size, this.facingRight);
-  }
+  draw() { drawTurtle(this.x, this.y, this.size, this.facingRight); }
 }
 
 function drawFooter() {
@@ -89,37 +111,28 @@ function drawFooter() {
 }
 
 function renderScene() {
-  drawPaperBG();
-  drawSun();
-  turtles.forEach(t => t.draw());
-  drawFooter();
+  drawPaperBG(); drawSun(); turtles.forEach(t => t.draw()); drawFooter();
 }
 
 class Particle {
   constructor(x, y, glow = false) {
-    this.x = x;
-    this.y = y;
-    this.vx = (Math.random() - 0.5) * 3;
-    this.vy = Math.random() * -3 - 1;
-    this.size = 10 + Math.random() * 400;
-    this.life = 0.4 + Math.random() * 0.6;
+    this.x = x; this.y = y;
+    this.vx = (Math.random() - 0.5) * 3; this.vy = Math.random() * -3 - 1;
+    this.size = 10 + Math.random() * 300; this.life = 0.4 + Math.random() * 0.6;
     this.glow = glow;
   }
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    this.life -= 0.02;
-  }
+  update() { this.x += this.vx; this.y += this.vy; this.life -= 0.02; }
   draw() {
-    if (fireImg.complete) {
+    const style = getStyle();
+    let img;
+    if (style === 'orig') img = fireImg;
+    else if (style === 'hand') img = fireHandImg;
+    else img = Math.random() < 0.5 ? fireImg : fireHandImg;
+    if (img.complete) {
       ctx.globalAlpha = Math.max(this.life, 0);
-      if (this.glow) {
-        ctx.shadowColor = 'orange';
-        ctx.shadowBlur = 20;
-      }
-      ctx.drawImage(fireImg, this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
-      ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
+      if (this.glow) { ctx.shadowColor = 'orange'; ctx.shadowBlur = 20; }
+      ctx.drawImage(img, this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
     }
   }
 }
@@ -127,59 +140,37 @@ class Particle {
 function burnStep(timestamp) {
   if (!burnStartTime) burnStartTime = timestamp;
   const elapsed = (timestamp - burnStartTime) / 1000;
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   renderScene();
-
   if (particles.length < 80) {
     for (let i = 0; i < 4; i++) {
       particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() < 0.3));
     }
   }
-
-  particles.forEach(p => p.update());
-  particles.forEach(p => p.draw());
+  particles.forEach(p => p.update()); particles.forEach(p => p.draw());
   particles = particles.filter(p => p.life > 0);
-
-  if (elapsed < 10) {
-    burnRAF = requestAnimationFrame(burnStep);
-  } else {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (elapsed < 10) { burnRAF = requestAnimationFrame(burnStep); }
+  else { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     setTimeout(() => alert('🔥 祈晴儀式完成！願天氣放晴！'), 300);
   }
 }
 
-function getRandomDispersedX() {
-  return canvas.width * Math.random();
-}
-
-function getRandomDispersedY() {
-  return TEXT_BOTTOM_Y + 20 + (canvas.height - TEXT_BOTTOM_Y - 140) * Math.random();
-}
+function getRandomDispersedX() { return canvas.width * Math.random(); }
+function getRandomDispersedY() { return TEXT_BOTTOM_Y + 20 + (canvas.height - TEXT_BOTTOM_Y - 140) * Math.random(); }
 
 document.getElementById('drawBtn').addEventListener('click', () => {
-  const x = getRandomDispersedX();
-  const y = getRandomDispersedY();
-  const size = 80 + Math.random() * 100;
-  const facingRight = x < canvas.width / 2;
-  turtles.push(new Turtle(x, y, size, facingRight));
-  renderScene();
+  const x = getRandomDispersedX(); const y = getRandomDispersedY();
+  const size = 80 + Math.random() * 100; const facingRight = x < canvas.width/2;
+  turtles.push(new Turtle(x, y, size, facingRight)); renderScene();
 });
 
 document.getElementById('burnBtn').addEventListener('click', () => {
-  particles = [];
-  burnStartTime = null;
-  cancelAnimationFrame(burnRAF);
-  requestAnimationFrame(burnStep);
+  particles = []; burnStartTime = null; cancelAnimationFrame(burnRAF); requestAnimationFrame(burnStep);
 });
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-  turtles.length = 0;
-  particles = [];
-  cancelAnimationFrame(burnRAF);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  renderScene();
+  turtles.length = 0; particles = []; cancelAnimationFrame(burnRAF);
+  ctx.clearRect(0, 0, canvas.width, canvas.height); renderScene();
 });
 
 renderScene();
