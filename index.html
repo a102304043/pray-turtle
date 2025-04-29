@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v1.6</title>
+  <title>燒烏龜祈晴 v1.7</title>
   <style>
     body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
     #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
@@ -28,164 +28,173 @@
   </div>
   <canvas id="paper" width="800" height="800"></canvas>
 <script>
-  const canvas = document.getElementById('paper');
-  const ctx = canvas.getContext('2d');
+const canvas = document.getElementById('paper');
+const ctx = canvas.getContext('2d');
 
-  const turtles = [];
-  let particles = [];
-  const sunPos = { x: canvas.width / 2, y: canvas.height * 0.13, r: 120 };
-  const TEXT_OFFSET = 20;
-  const TEXT_BOTTOM_Y = sunPos.y + sunPos.r + TEXT_OFFSET + 32;
+const turtles = [];
+let particles = [];
+const sunPos = { x: canvas.width / 2, y: canvas.height * 0.13, r: 120 };
+const TEXT_OFFSET = 20;
+const TEXT_BOTTOM_Y = sunPos.y + sunPos.r + TEXT_OFFSET + 32;
 
-  const turtleImg = new Image(); turtleImg.src = 'turtle.png';
-  const sunImg    = new Image(); sunImg.src    = 'sun.png';
-  const fireImg   = new Image(); fireImg.src   = 'fire.png';
+const turtleImg = new Image(); turtleImg.src = 'turtle.png';
+const sunImg = new Image(); sunImg.src = 'sun.png';
+const fireImg = new Image(); fireImg.src = 'fire.png';
 
-  function drawPaperBG() {
-    ctx.fillStyle = '#FFFFF0';
+function drawPaperBG() {
+  ctx.fillStyle = '#FFFFF0';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawSun() {
+  if (sunImg.complete) {
+    ctx.drawImage(sunImg, sunPos.x - sunPos.r, sunPos.y - sunPos.r, sunPos.r * 2, sunPos.r * 2);
+  }
+}
+
+function drawTurtle(x, y, size, facingRight) {
+  ctx.save();
+  ctx.translate(x, y);
+  if (facingRight) ctx.scale(-1, 1);
+  if (turtleImg.complete) {
+    ctx.drawImage(turtleImg, -size/2, -size/2, size, size);
+  }
+  ctx.restore();
+}
+
+class Turtle {
+  constructor(x, y, size, facingRight) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.facingRight = facingRight;
+  }
+  draw() {
+    drawTurtle(this.x, this.y, this.size, this.facingRight);
+  }
+}
+
+function drawFooter() {
+  const d = document.getElementById('dateInput').value || 'YYYY-MM-DD';
+  const t = document.getElementById('timeInput').value || 'HH:MM';
+  const l = document.getElementById('locInput').value || '地點';
+  ctx.fillStyle = '#000';
+  ctx.font = '28px sans-serif';
+  ctx.textAlign = 'center';
+  const textY = sunPos.y + sunPos.r + TEXT_OFFSET;
+  ctx.fillText(`${d}  ${t}`, canvas.width / 2, textY);
+  ctx.fillText(l, canvas.width / 2, textY + 32);
+}
+
+function renderScene() {
+  drawPaperBG();
+  drawSun();
+  turtles.forEach(t => t.draw());
+  drawFooter();
+}
+
+class Particle {
+  constructor(x, y, glow = false) {
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random() - 0.5) * 4;
+    this.vy = Math.random() * -4 - 2;
+    this.size = 40 + Math.random() * 100;
+    this.life = 0.8 + Math.random() * 0.8;
+    this.glow = glow;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life -= 0.02;
+  }
+  draw() {
+    if (fireImg.complete) {
+      ctx.globalAlpha = Math.max(this.life, 0);
+      if (this.glow) {
+        ctx.shadowColor = 'orange';
+        ctx.shadowBlur = 25;
+      }
+      ctx.drawImage(fireImg, this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+    }
+  }
+}
+
+let burnProgress = 0, fadeProgress = 0, burningDone = false, burnRAF;
+function burnStep() {
+  burnRAF = requestAnimationFrame(burnStep);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!burningDone) {
+    burnProgress += 0.005;
+    if (burnProgress >= 1) burningDone = true;
+  } else {
+    fadeProgress += 0.01;
+  }
+
+  for (let i = 0; i < 6; i++) {
+    if (particles.length < 200) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const glow = Math.random() < 0.5;
+      particles.push(new Particle(x, y, glow));
+    }
+  }
+
+  particles.forEach(p => p.update());
+  renderScene();
+  particles.forEach(p => p.draw());
+  particles = particles.filter(p => p.life > 0);
+
+  if (burningDone) {
+    ctx.fillStyle = `rgba(0,0,0,${Math.min(fadeProgress, 1)})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  function drawSun() {
-    if (sunImg.complete) {
-      ctx.drawImage(sunImg, sunPos.x - sunPos.r, sunPos.y - sunPos.r, sunPos.r * 2, sunPos.r * 2);
-    }
-  }
-
-  function drawTurtle(x, y, size, facingRight) {
-    ctx.save();
-    ctx.translate(x, y);
-    if (facingRight) ctx.scale(-1, 1);
-    if (turtleImg.complete) {
-      ctx.drawImage(turtleImg, -size/2, -size/2, size, size);
-    }
-    ctx.restore();
-  }
-
-  class Turtle {
-    constructor(x, y, size, facingRight) {
-      this.x = x;
-      this.y = y;
-      this.size = size;
-      this.facingRight = facingRight;
-    }
-    draw() {
-      drawTurtle(this.x, this.y, this.size, this.facingRight);
-    }
-  }
-
-  function drawFooter() {
-    const d = document.getElementById('dateInput').value || 'YYYY-MM-DD';
-    const t = document.getElementById('timeInput').value   || 'HH:MM';
-    const l = document.getElementById('locInput').value    || '地點';
-    ctx.fillStyle = '#000';
-    ctx.font = '28px sans-serif';
-    ctx.textAlign = 'center';
-    const textY = sunPos.y + sunPos.r + TEXT_OFFSET;
-    ctx.fillText(`${d}  ${t}`, canvas.width/2, textY);
-    ctx.fillText(l, canvas.width/2, textY + 32);
-  }
-
-  function renderScene() {
-    drawPaperBG();
-    drawSun();
-    turtles.forEach(t => t.draw());
-    drawFooter();
-  }
-
-  class Particle {
-    constructor(x, y, glow = false) {
-      this.x = x;
-      this.y = y;
-      this.vx = (Math.random() - 0.5) * 4;
-      this.vy = Math.random() * -4 - 2;
-      this.size = 40 + Math.random() * 100;
-      this.life = 0.8 + Math.random() * 0.8;
-      this.glow = glow;
-    }
-    update() {
-      this.x += this.vx;
-      this.y += this.vy;
-      this.life -= 0.02;
-    }
-    draw() {
-      if (fireImg.complete) {
-        ctx.globalAlpha = Math.max(this.life, 0);
-        if (this.glow) {
-          ctx.shadowColor = 'orange';
-          ctx.shadowBlur = 25;
-        }
-        ctx.drawImage(fireImg, this.x - this.size/2, this.y - this.size/2, this.size, this.size);
-        ctx.globalAlpha = 1;
-        ctx.shadowBlur = 0;
-      }
-    }
-  }
-
-  let burnProgress = 0, fadeProgress = 0, burningDone = false, burnRAF;
-  function burnStep(timestamp) {
-    if (!burningDone) {
-      burnProgress += 0.005;
-      if (burnProgress >= 1) burningDone = true;
-    } else {
-      fadeProgress += 0.01;
-    }
-    if (particles.length < 500) {
-      for (let i = 0; i < 8; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const glow = Math.random() < 0.5;
-        particles.push(new Particle(x, y, glow));
-      }
-    }
-    particles.forEach(p => p.update());
-    renderScene();
-    particles.forEach(p => p.draw());
-    particles = particles.filter(p => p.life > 0);
-    if (burningDone) {
-      ctx.fillStyle = `rgba(0,0,0,${Math.min(fadeProgress, 1)})`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    if (fadeProgress < 1.5) burnRAF = requestAnimationFrame(burnStep);
-    else setTimeout(() => alert('🔥 祈晴儀式完成！願天氣放晴！'), 300);
-  }
-
-  function getRandomDispersedX() {
-    return canvas.width * (Math.random() * 0.9 + 0.05);
-  }
-
-  function getRandomDispersedY() {
-    return TEXT_BOTTOM_Y + 20 + (canvas.height - TEXT_BOTTOM_Y - 140) * Math.random();
-  }
-
-  document.getElementById('drawBtn').addEventListener('click', () => {
-    const x = getRandomDispersedX();
-    const y = getRandomDispersedY();
-    const size = 80 + Math.random() * 100;
-    const facingRight = x < canvas.width / 2;
-    turtles.push(new Turtle(x, y, size, facingRight));
-    renderScene();
-  });
-
-  document.getElementById('burnBtn').addEventListener('click', () => {
-    burnProgress = fadeProgress = 0;
-    burningDone = false;
-    particles = [];
+  if (fadeProgress >= 1.5) {
     cancelAnimationFrame(burnRAF);
-    burnStep();
-  });
+    setTimeout(() => alert('🔥 祈晴儀式完成！願天氣放晴！'), 300);
+  }
+}
 
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    turtles.length = 0;
-    particles = [];
-    burnProgress = fadeProgress = 0;
-    burningDone = false;
-    cancelAnimationFrame(burnRAF);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    renderScene();
-  });
+function getRandomDispersedX() {
+  return canvas.width * Math.random();
+}
 
+function getRandomDispersedY() {
+  return TEXT_BOTTOM_Y + 20 + (canvas.height - TEXT_BOTTOM_Y - 140) * Math.random();
+}
+
+document.getElementById('drawBtn').addEventListener('click', () => {
+  const x = getRandomDispersedX();
+  const y = getRandomDispersedY();
+  const size = 80 + Math.random() * 100;
+  const facingRight = x < canvas.width / 2;
+  turtles.push(new Turtle(x, y, size, facingRight));
   renderScene();
+});
+
+document.getElementById('burnBtn').addEventListener('click', () => {
+  burnProgress = fadeProgress = 0;
+  burningDone = false;
+  particles = [];
+  cancelAnimationFrame(burnRAF);
+  burnStep();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  turtles.length = 0;
+  particles = [];
+  burnProgress = fadeProgress = 0;
+  burningDone = false;
+  cancelAnimationFrame(burnRAF);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  renderScene();
+});
+
+renderScene();
 </script>
 </body>
 </html>
