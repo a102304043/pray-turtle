@@ -2,36 +2,91 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴 v2.3</title>
+  <title>燒烏龜祈晴 v2.4</title>
   <style>
-    body { font-family: "Noto Sans TC", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #fafafa; }
-    #controls { display: flex; gap: 1rem; padding: 1rem; flex-wrap: wrap; justify-content: center; }
-    label, select { font-size: 1.4rem; }
-    input { margin-left: 6px; padding: 14px 20px; font-size: 1.3rem; border: 1px solid #ccc; border-radius: 6px; }
-    button { padding: 24px 48px; font-size: 1.8rem; font-weight: 700; border: none; border-radius: 16px; cursor: pointer; background: #4caf50; color: #fff; transition: background .2s; }
+    body {
+      font-family: "Noto Sans TC", Arial, sans-serif;
+      margin: 0;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      padding: 1rem;
+      width: 90%;
+      max-width: 1000px;
+      align-items: end;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      font-size: 1.2rem;
+    }
+    input, select {
+      padding: 12px 16px;
+      font-size: 1.2rem;
+      margin-top: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .button-group {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    button {
+      padding: 20px 36px;
+      font-size: 1.6rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: #4caf50;
+      color: white;
+      transition: background 0.2s ease-in-out;
+    }
     button:hover { background: #43a047; }
     #burnBtn { background: #e65100; }
     #burnBtn:hover { background: #bf360c; }
     #resetBtn { background: #546e7a; }
     #resetBtn:hover { background: #37474f; }
-    canvas { border: 3px solid #ccc; box-shadow: 0 6px 15px rgba(0,0,0,.2); margin-bottom: 1rem; }
+    canvas {
+      border: 3px solid #ccc;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+      margin: 1rem auto;
+    }
   </style>
 </head>
 <body>
   <div id="controls">
-    <label>日期 <input id="dateInput" type="date" value="2025-05-06"></label>
-    <label>時間 <input id="timeInput" type="time" value="13:00"></label>
-    <label>地點 <input id="locInput" type="text" value="基隆潮境公園"></label>
-    <label>風格 
+    <label>日期
+      <input id="dateInput" type="date" value="2025-05-06">
+    </label>
+    <label>時間
+      <input id="timeInput" type="time" value="13:00">
+    </label>
+    <label>地點
+      <input id="locInput" type="text" value="基隆潮境公園">
+    </label>
+    <label>風格選擇
       <select id="styleSelect">
         <option value="orig">一般</option>
         <option value="hand">手繪</option>
         <option value="mix">隨機混合</option>
       </select>
     </label>
-    <button id="drawBtn">畫 🐢</button>
-    <button id="burnBtn">燒 🔥</button>
-    <button id="resetBtn">重來 ↺</button>
+    <div class="button-group">
+      <button id="drawBtn" type="button">畫 🐢</button>
+      <button id="burnBtn" type="button">燒 🔥</button>
+      <button id="resetBtn" type="button">重來 ↺</button>
+    </div>
   </div>
   <canvas id="paper" width="800" height="800"></canvas>
 <script>
