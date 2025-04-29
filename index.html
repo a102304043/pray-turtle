@@ -164,18 +164,29 @@ function burnStep(timestamp) {
 function getRandomX() { return canvas.width * Math.random(); }
 function getRandomY() { return TEXT_BOTTOM_Y + 20 + (canvas.height-TEXT_BOTTOM_Y-140)*Math.random(); }
 
-document.getElementById('drawBtn').addEventListener('click',()=>{
-  // 混合模式下，每次重來或切換模式後需重置太陽樣式
-  if (document.getElementById('styleSelect').value !== 'mix') randomSunStyle = null;
+document.getElementById('drawBtn').addEventListener('click', () => {
   const mode = document.getElementById('styleSelect').value;
-  let style = mode;
-  if (mode === 'mix') {
-    style = randomSunStyle || (Math.random()<0.5?'orig':'hand');
+  // 混合模式下首次決定太陽樣式，並在非混合時重置
+  if (mode !== 'mix') {
+    randomSunStyle = null;
+  } else if (!randomSunStyle) {
+    randomSunStyle = Math.random() < 0.5 ? 'orig' : 'hand';
   }
-  const x = getRandomX(), y = getRandomY();
-  const size = 80 + Math.random()*100;
-  turtles.push(new Turtle(x,y,size,style));
+  // 烏龜風格（混合模式下每次隨機）
+  let turtleStyle;
+  if (mode === 'orig') {
+    turtleStyle = 'orig';
+  } else if (mode === 'hand') {
+    turtleStyle = 'hand';
+  } else {
+    turtleStyle = Math.random() < 0.5 ? 'orig' : 'hand';
+  }
+  const x = getRandomX();
+  const y = getRandomY();
+  const size = 80 + Math.random() * 100;
+  turtles.push(new Turtle(x, y, size, turtleStyle));
   renderScene();
+});
 });
 
 document.getElementById('burnBtn').addEventListener('click',()=>{
