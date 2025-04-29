@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>燒烏龜祈晴</title>
+  <title>燒烏龜祈晴 – 全畫布燃燒版</title>
   <style>
     body{font-family:"Noto Sans TC",Arial,sans-serif;margin:0;display:flex;flex-direction:column;align-items:center;background:#fafafa}
     #controls{display:flex;gap:1rem;padding:1rem;flex-wrap:wrap;justify-content:center}
@@ -75,14 +75,14 @@ function burnStep(){
 /* ---------- 事件 ---------- */
 // 畫烏龜
   document.getElementById('drawBtn').addEventListener('click',()=>{
-    // 固定在地面(底部100px範圍內隨機)
+    // 固定在底部地面 (底部100px 範圍隨機)
     const groundY = canvas.height - 100;
     const x = 50 + Math.random() * (canvas.width - 100);
     const y = groundY + Math.random() * 50;
-    // 隨機尺寸40~100
+    // 隨機尺寸 40~100
     const size = 40 + Math.random() * 60;
-    // 烏龜圖片原始頭朝左，角度補正180度，使頭朝向太陽
-    const ang = Math.atan2(sunPos.y - y, sunPos.x - x) + Math.PI;
+    // 左半邊向右 (0)，右半邊向左 (π)
+    const ang = x < canvas.width/2 ? 0 : Math.PI;
     turtles.push(new Turtle(x, y, ang, size));
     renderScene();
   });
